@@ -3,10 +3,19 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Brain, Trophy, Users, Zap, LogIn } from 'lucide-react';
+import { 
+  Trophy, 
+  Users, 
+  Brain, 
+  Zap, 
+  Timer, 
+  LogIn, 
+  LogOut, 
+  UserCircle 
+} from 'lucide-react';
 
-const Index = () => {
-  const { currentUser, loginWithGoogle } = useAuth();
+const HomePage = () => {
+  const { currentUser, loginWithGoogle, logout } = useAuth();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -18,18 +27,22 @@ const Index = () => {
           </div>
           <div className="flex items-center space-x-4">
             {currentUser ? (
-              <Link to="/profile">
-                <Button variant="outline" className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full overflow-hidden">
-                    <img 
-                      src={currentUser.photoURL || 'https://via.placeholder.com/32'} 
-                      alt={currentUser.displayName || 'User'}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  <span className="hidden md:inline">{currentUser.displayName}</span>
+              <>
+                <Link to="/profile">
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <UserCircle className="h-5 w-5" />
+                    <span className="hidden sm:inline">Profile</span>
+                  </Button>
+                </Link>
+                <Button 
+                  variant="outline" 
+                  className="flex items-center gap-2"
+                  onClick={() => logout()}
+                >
+                  <LogOut className="h-5 w-5" />
+                  <span className="hidden sm:inline">Logout</span>
                 </Button>
-              </Link>
+              </>
             ) : (
               <Button 
                 onClick={() => loginWithGoogle()}
@@ -91,7 +104,7 @@ const Index = () => {
               </div>
 
               <div className="quiz-card p-6 flex flex-col items-center text-center">
-                <Zap className="h-12 w-12 text-quiz-accent mb-4" />
+                <Timer className="h-12 w-12 text-quiz-accent mb-4" />
                 <h3 className="text-xl font-semibold mb-2">Timed Rounds</h3>
                 <p className="text-gray-600">Answer quickly to score more points in 15-second rounds.</p>
               </div>
@@ -149,4 +162,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default HomePage;

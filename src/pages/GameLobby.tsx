@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -76,10 +75,8 @@ const GameLobby = () => {
     try {
       setLoading(true);
       
-      // Get AI-generated questions or fetch from API
+      // Get mock questions from our modified service that handles API failures
       const questions = await generateQuizQuestions('general', 'medium', 5);
-      // Alternative: Use API instead of Gemini
-      // const questions = await getQuestions('general', 'medium', 5);
       
       socket.emit('start-game', { roomId, questions });
       setQuestions(questions);

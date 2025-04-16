@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 
@@ -7,6 +6,7 @@ interface MockSocket {
   id: string;
   connected: boolean;
   on: (event: string, callback: Function) => void;
+  off: (event: string, callback?: Function) => void; // Added off method
   emit: (event: string, data: any) => void;
   disconnect: () => void;
 }
@@ -23,6 +23,18 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
         eventHandlers[event] = [];
       }
       eventHandlers[event].push(callback);
+    },
+    off: (event: string, callback?: Function) => {
+      // If callback is provided, remove just that callback
+      if (callback && eventHandlers[event]) {
+        const index = eventHandlers[event].indexOf(callback);
+        if (index !== -1) {
+          eventHandlers[event].splice(index, 1);
+        }
+      } else {
+        // Otherwise, remove all callbacks for this event
+        delete eventHandlers[event];
+      }
     },
     emit: (event: string, data: any) => {
       console.log(`[Mock Socket] Emit: ${event}`, data);

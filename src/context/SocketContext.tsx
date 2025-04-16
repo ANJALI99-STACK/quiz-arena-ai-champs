@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 
@@ -6,7 +7,7 @@ interface MockSocket {
   id: string;
   connected: boolean;
   on: (event: string, callback: Function) => void;
-  off: (event: string, callback?: Function) => void; // Added off method
+  off: (event: string, callback?: Function) => void;
   emit: (event: string, data: any) => void;
   disconnect: () => void;
 }
@@ -109,7 +110,49 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
             break;
             
           case 'submit-answer':
-            // No immediate response needed, the timer will handle transitioning to the next question
+            // Since this is single player mode, immediately trigger the question-ended event
+            // and don't wait for others to answer
+            if (eventHandlers['question-ended']) {
+              const correctAnswer = data.questions ? data.questions[data.questionIndex].correctAnswer : null;
+              const isCorrect = data.selectedAnswer === correctAnswer;
+              
+              // Short delay to make it feel more natural
+              setTimeout(() => {
+                eventHandlers['question-ended'].forEach(callback => 
+                  callback({
+                    correctAnswer: correctAnswer,
+                    scores: [
+                      {
+                        userId,
+                        name: userName,
+                        photoURL: userPhoto,
+                        score: isCorrect ? 100 : 0,
+                        correctAnswers: isCorrect ? 1 : 0,
+                        answeredQuestions: 1
+                      }
+                    ]
+                  })
+                );
+                
+                // Move to next question after a short delay
+                setTimeout(() => {
+                  if (eventHandlers['next-question']) {
+                    const nextIndex = data.questionIndex + 1;
+                    
+                    // If we've reached the last question, end the game
+                    if (nextIndex >= (data.questions ? data.questions.length : 0)) {
+                      if (eventHandlers['game-ended']) {
+                        eventHandlers['game-ended'].forEach(callback => callback());
+                      }
+                    } else {
+                      eventHandlers['next-question'].forEach(callback => 
+                        callback({ questionIndex: nextIndex })
+                      );
+                    }
+                  }
+                }, 3000);
+              }, 1000);
+            }
             break;
             
           case 'leave-room':

@@ -87,7 +87,8 @@ const QuizGame = () => {
     socket.emit('submit-answer', {
       roomId,
       questionIndex: currentQuestion,
-      selectedAnswer
+      selectedAnswer,
+      questions // Pass the entire questions array to the mock socket
     });
 
     setSubmitted(true);

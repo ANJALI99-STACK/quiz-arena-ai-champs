@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 
@@ -15,6 +14,10 @@ interface MockSocket {
 // Create a mock socket implementation
 const createMockSocket = (userId: string, userName: string, userPhoto: string): MockSocket => {
   const eventHandlers: Record<string, Function[]> = {};
+  let playerScore = 0;
+  let correctAnswersCount = 0;
+  let answeredQuestionsCount = 0;
+  let timerInterval: NodeJS.Timeout | null = null;
   
   return {
     id: `mock-socket-${Math.random().toString(36).substring(2, 9)}`,
@@ -69,13 +72,29 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
             
             // Simulate a timer update for the first question
             if (eventHandlers['timer-update']) {
+              // Clear any existing timer
+              if (timerInterval) {
+                clearInterval(timerInterval);
+              }
+              
+              // Reset score for new game
+              playerScore = 0;
+              correctAnswersCount = 0;
+              answeredQuestionsCount = 0;
+              
               let timeLeft = 15;
-              const timerInterval = setInterval(() => {
+              timerInterval = setInterval(() => {
                 timeLeft--;
                 eventHandlers['timer-update'].forEach(callback => callback({ timeLeft }));
                 
                 if (timeLeft <= 0) {
-                  clearInterval(timerInterval);
+                  if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                  }
+                  
+                  // Question timed out - count as answered but not correct
+                  answeredQuestionsCount++;
                   
                   // Simulate question ended event
                   if (eventHandlers['question-ended']) {
@@ -87,9 +106,9 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
                             userId,
                             name: userName,
                             photoURL: userPhoto,
-                            score: 100,
-                            correctAnswers: 1,
-                            answeredQuestions: 1
+                            score: playerScore,
+                            correctAnswers: correctAnswersCount,
+                            answeredQuestions: answeredQuestionsCount
                           }
                         ]
                       })
@@ -102,6 +121,9 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
                       eventHandlers['next-question'].forEach(callback => 
                         callback({ questionIndex: 1 })
                       );
+                      
+                      // Start timer for next question
+                      startTimerForQuestion(1, data.questions);
                     }
                   }, 5000);
                 }
@@ -110,11 +132,23 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
             break;
             
           case 'submit-answer':
+            // Clear the running timer when an answer is submitted
+            if (timerInterval) {
+              clearInterval(timerInterval);
+              timerInterval = null;
+            }
+            
             // Since this is single player mode, immediately trigger the question-ended event
-            // and don't wait for others to answer
             if (eventHandlers['question-ended']) {
               const correctAnswer = data.questions ? data.questions[data.questionIndex].correctAnswer : null;
               const isCorrect = data.selectedAnswer === correctAnswer;
+              
+              // Update score and counters
+              answeredQuestionsCount++;
+              if (isCorrect) {
+                correctAnswersCount++;
+                playerScore += 100;
+              }
               
               // Short delay to make it feel more natural
               setTimeout(() => {
@@ -126,9 +160,9 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
                         userId,
                         name: userName,
                         photoURL: userPhoto,
-                        score: isCorrect ? 100 : 0,
-                        correctAnswers: isCorrect ? 1 : 0,
-                        answeredQuestions: 1
+                        score: playerScore,
+                        correctAnswers: correctAnswersCount,
+                        answeredQuestions: answeredQuestionsCount
                       }
                     ]
                   })
@@ -148,6 +182,9 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
                       eventHandlers['next-question'].forEach(callback => 
                         callback({ questionIndex: nextIndex })
                       );
+                      
+                      // Start timer for next question
+                      startTimerForQuestion(nextIndex, data.questions);
                     }
                   }
                 }, 3000);
@@ -156,6 +193,12 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
             break;
             
           case 'leave-room':
+            // Clear any running timer
+            if (timerInterval) {
+              clearInterval(timerInterval);
+              timerInterval = null;
+            }
+            
             if (eventHandlers['player-left']) {
               eventHandlers['player-left'].forEach(callback => 
                 callback({ 
@@ -171,9 +214,76 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
       }, 300); // Simulate network delay
     },
     disconnect: () => {
+      // Clear any running timer
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
       console.log('[Mock Socket] Disconnected');
     }
   };
+  
+  // Helper function to start timer for a specific question
+  function startTimerForQuestion(questionIndex: number, questions: any[]) {
+    if (!eventHandlers['timer-update']) return;
+    
+    let timeLeft = 15;
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      eventHandlers['timer-update'].forEach(callback => callback({ timeLeft }));
+      
+      if (timeLeft <= 0) {
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+        
+        // Question timed out - count as answered but not correct
+        answeredQuestionsCount++;
+        
+        // Trigger question ended event
+        if (eventHandlers['question-ended']) {
+          const correctAnswer = questions[questionIndex].correctAnswer;
+          eventHandlers['question-ended'].forEach(callback => 
+            callback({
+              correctAnswer,
+              scores: [
+                {
+                  userId,
+                  name: userName,
+                  photoURL: userPhoto,
+                  score: playerScore,
+                  correctAnswers: correctAnswersCount,
+                  answeredQuestions: answeredQuestionsCount
+                }
+              ]
+            })
+          );
+        }
+        
+        // Move to next question after delay
+        setTimeout(() => {
+          if (eventHandlers['next-question']) {
+            const nextIndex = questionIndex + 1;
+            
+            // If we've reached the last question, end the game
+            if (nextIndex >= questions.length) {
+              if (eventHandlers['game-ended']) {
+                eventHandlers['game-ended'].forEach(callback => callback());
+              }
+            } else {
+              eventHandlers['next-question'].forEach(callback => 
+                callback({ questionIndex: nextIndex })
+              );
+              
+              // Start timer for next question
+              startTimerForQuestion(nextIndex, questions);
+            }
+          }
+        }, 5000);
+      }
+    }, 1000);
+  }
 };
 
 interface SocketContextType {

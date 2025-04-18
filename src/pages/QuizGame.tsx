@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuiz } from '../context/QuizContext';
@@ -60,21 +61,25 @@ const QuizGame = () => {
   useEffect(() => {
     if (!socket || !roomId) return;
 
-    // Join room
+    console.log('[QuizGame] Joining game room:', roomId);
     socket.emit('join-game', { roomId });
 
-    // Set up event listeners
     socket.on('timer-update', ({ timeLeft }) => {
+      console.log('[QuizGame] Timer update:', timeLeft);
       setTimeRemaining(timeLeft);
     });
 
     socket.on('question-ended', ({ correctAnswer, scores }) => {
+      console.log('[QuizGame] Question ended. Correct answer:', correctAnswer);
+      console.log('[QuizGame] Updated scores:', scores);
       setCorrectAnswer(correctAnswer);
       setPlayerScores(scores);
       setShowResults(true);
     });
 
     socket.on('next-question', ({ questionIndex }) => {
+      console.log('[QuizGame] Moving to next question:', questionIndex);
+      console.log('[QuizGame] Question data:', questions[questionIndex]);
       setCurrentQuestion(questionIndex);
       setSelectedAnswer(null);
       setSubmitted(false);
@@ -83,11 +88,11 @@ const QuizGame = () => {
     });
 
     socket.on('game-ended', () => {
+      console.log('[QuizGame] Game ended');
       setGameStatus('ended');
       navigate(`/results/${roomId}`);
     });
 
-    // Cleanup on unmount
     return () => {
       socket.off('timer-update');
       socket.off('question-ended');

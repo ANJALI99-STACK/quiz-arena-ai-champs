@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuiz } from '../context/QuizContext';
@@ -7,10 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card } from '@/components/ui/card';
 import { Clock, AlertCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const QuizGame = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { 
     questions, 
     currentQuestion, 
@@ -28,6 +29,18 @@ const QuizGame = () => {
   const [submitted, setSubmitted] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [correctAnswer, setCorrectAnswer] = useState<string | null>(null);
+
+  // Watch for time running out
+  useEffect(() => {
+    if (timeRemaining === 0 && !submitted && !showResults) {
+      toast({
+        title: "Time's Up!",
+        description: "You ran out of time for this question.",
+        variant: "destructive",
+      });
+      setSubmitted(true);
+    }
+  }, [timeRemaining, submitted, showResults, toast]);
 
   // Redirect if no questions loaded
   useEffect(() => {

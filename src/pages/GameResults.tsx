@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuiz } from '../context/QuizContext';
@@ -32,14 +31,12 @@ const GameResults = () => {
   const [loading, setLoading] = useState(true);
   const [showDetails, setShowDetails] = useState(false);
 
-  // Redirect if no scores
   useEffect(() => {
     if (playerScores.length === 0) {
       navigate('/');
     }
   }, [playerScores, navigate]);
 
-  // Save results to database
   useEffect(() => {
     const saveResults = async () => {
       if (isHost && roomId && playerScores.length > 0 && questions.length > 0) {
@@ -64,7 +61,6 @@ const GameResults = () => {
     saveResults();
   }, [isHost, roomId, playerScores, questions]);
 
-  // Generate personalized feedback for the current user
   useEffect(() => {
     const getPersonalFeedback = async () => {
       if (!currentUser) return;
@@ -94,14 +90,12 @@ const GameResults = () => {
     getPersonalFeedback();
   }, [currentUser, playerScores, questions]);
 
-  // Trigger confetti for winners
   useEffect(() => {
     if (playerScores.length > 0 && currentUser) {
       const sortedScores = [...playerScores].sort((a, b) => b.score - a.score);
       const currentPlayerRank = sortedScores.findIndex(player => player.userId === currentUser.uid);
       
       if (currentPlayerRank === 0) {
-        // Trigger confetti for the winner
         confetti({
           particleCount: 100,
           spread: 70,
@@ -112,17 +106,15 @@ const GameResults = () => {
   }, [playerScores, currentUser]);
 
   const handleNewGame = () => {
-    navigate('/create');
+    navigate(`/lobby/${roomId}`);
   };
 
-  // Get current player's position
   const getCurrentPlayerPosition = () => {
     if (!currentUser) return -1;
     const sortedScores = [...playerScores].sort((a, b) => b.score - a.score);
     return sortedScores.findIndex(player => player.userId === currentUser.uid) + 1;
   };
 
-  // Sort players by score
   const sortedPlayers = [...playerScores].sort((a, b) => b.score - a.score);
 
   return (
@@ -133,7 +125,6 @@ const GameResults = () => {
           <p className="text-gray-600">See how you did and where you stand!</p>
         </div>
 
-        {/* Top Three Winners */}
         <div className="mb-12">
           <div className="relative h-48 md:h-56 flex items-end justify-center mb-6">
             {sortedPlayers.length > 1 && (
@@ -189,7 +180,6 @@ const GameResults = () => {
           </div>
         </div>
 
-        {/* Personal Feedback */}
         {currentUser && (
           <Card className="mb-8 animate-fade-in">
             <CardContent className="p-6">
@@ -237,7 +227,6 @@ const GameResults = () => {
           </Card>
         )}
 
-        {/* Full Leaderboard */}
         <div className="mb-8">
           <button 
             className="flex items-center gap-2 mb-4 font-semibold text-quiz-primary"
@@ -286,7 +275,6 @@ const GameResults = () => {
           )}
         </div>
 
-        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row justify-center gap-4">
           <Link to="/">
             <Button variant="outline" className="w-full sm:w-auto flex items-center gap-2">

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 
@@ -18,6 +19,7 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
   let correctAnswersCount = 0;
   let answeredQuestionsCount = 0;
   let timerInterval: NodeJS.Timeout | null = null;
+  let currentGameQuestions: any[] = [];
   
   return {
     id: `mock-socket-${Math.random().toString(36).substring(2, 9)}`,
@@ -64,9 +66,17 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
             break;
             
           case 'start-game':
+            // Store questions for this game session
+            currentGameQuestions = [...data.questions];
+            
+            // Reset game state for a new game
+            playerScore = 0;
+            correctAnswersCount = 0;
+            answeredQuestionsCount = 0;
+            
             if (eventHandlers['game-started']) {
               eventHandlers['game-started'].forEach(callback => 
-                callback({ questions: data.questions })
+                callback({ questions: currentGameQuestions })
               );
             }
             
@@ -76,11 +86,6 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
               if (timerInterval) {
                 clearInterval(timerInterval);
               }
-              
-              // Reset score for new game
-              playerScore = 0;
-              correctAnswersCount = 0;
-              answeredQuestionsCount = 0;
               
               let timeLeft = 15;
               timerInterval = setInterval(() => {
@@ -100,7 +105,7 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
                   if (eventHandlers['question-ended']) {
                     eventHandlers['question-ended'].forEach(callback => 
                       callback({
-                        correctAnswer: data.questions[0].correctAnswer,
+                        correctAnswer: currentGameQuestions[0].correctAnswer,
                         scores: [
                           {
                             userId,
@@ -123,7 +128,7 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
                       );
                       
                       // Start timer for next question
-                      startTimerForQuestion(1, data.questions);
+                      startTimerForQuestion(1);
                     }
                   }, 5000);
                 }
@@ -140,7 +145,7 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
             
             // Since this is single player mode, immediately trigger the question-ended event
             if (eventHandlers['question-ended']) {
-              const correctAnswer = data.questions ? data.questions[data.questionIndex].correctAnswer : null;
+              const correctAnswer = currentGameQuestions[data.questionIndex].correctAnswer;
               const isCorrect = data.selectedAnswer === correctAnswer;
               
               // Update score and counters
@@ -174,7 +179,7 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
                     const nextIndex = data.questionIndex + 1;
                     
                     // If we've reached the last question, end the game
-                    if (nextIndex >= (data.questions ? data.questions.length : 0)) {
+                    if (nextIndex >= currentGameQuestions.length) {
                       if (eventHandlers['game-ended']) {
                         eventHandlers['game-ended'].forEach(callback => callback());
                       }
@@ -184,7 +189,7 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
                       );
                       
                       // Start timer for next question
-                      startTimerForQuestion(nextIndex, data.questions);
+                      startTimerForQuestion(nextIndex);
                     }
                   }
                 }, 3000);
@@ -224,7 +229,7 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
   };
   
   // Helper function to start timer for a specific question
-  function startTimerForQuestion(questionIndex: number, questions: any[]) {
+  function startTimerForQuestion(questionIndex: number) {
     if (!eventHandlers['timer-update']) return;
     
     let timeLeft = 15;
@@ -243,7 +248,7 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
         
         // Trigger question ended event
         if (eventHandlers['question-ended']) {
-          const correctAnswer = questions[questionIndex].correctAnswer;
+          const correctAnswer = currentGameQuestions[questionIndex].correctAnswer;
           eventHandlers['question-ended'].forEach(callback => 
             callback({
               correctAnswer,
@@ -267,7 +272,7 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
             const nextIndex = questionIndex + 1;
             
             // If we've reached the last question, end the game
-            if (nextIndex >= questions.length) {
+            if (nextIndex >= currentGameQuestions.length) {
               if (eventHandlers['game-ended']) {
                 eventHandlers['game-ended'].forEach(callback => callback());
               }
@@ -277,7 +282,7 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
               );
               
               // Start timer for next question
-              startTimerForQuestion(nextIndex, questions);
+              startTimerForQuestion(nextIndex);
             }
           }
         }, 5000);

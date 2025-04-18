@@ -23,7 +23,7 @@ const GameLobby = () => {
   const [loading, setLoading] = useState(false);
   const { currentUser } = useAuth();
   const { socket, isConnected } = useSocket();
-  const { isHost, setQuestions } = useQuiz();
+  const { isHost, setQuestions, setCurrentQuestion, setTimeRemaining, setSelectedAnswer, setGameStatus } = useQuiz();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -32,6 +32,12 @@ const GameLobby = () => {
       navigate('/');
       return;
     }
+
+    // Reset game state when entering the lobby
+    setCurrentQuestion(0);
+    setTimeRemaining(15);
+    setSelectedAnswer(null);
+    setGameStatus('waiting');
 
     if (socket && roomId) {
       socket.emit('join-room', { roomId });
@@ -59,7 +65,7 @@ const GameLobby = () => {
         socket.off('game-started');
       };
     }
-  }, [socket, roomId, currentUser, navigate, setQuestions]);
+  }, [socket, roomId, currentUser, navigate, setQuestions, setCurrentQuestion, setTimeRemaining, setSelectedAnswer, setGameStatus]);
 
   const copyRoomCode = () => {
     if (roomId) {

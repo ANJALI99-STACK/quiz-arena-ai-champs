@@ -36,6 +36,13 @@ const QuizGame = () => {
     }
   }, [questions, navigate]);
 
+  // Reset game state when component mounts
+  useEffect(() => {
+    setSubmitted(false);
+    setShowResults(false);
+    setCorrectAnswer(null);
+  }, []);
+
   // Initialize timer and listeners when component mounts
   useEffect(() => {
     if (!socket || !roomId) return;

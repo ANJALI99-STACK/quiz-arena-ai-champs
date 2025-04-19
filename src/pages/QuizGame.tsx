@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuiz } from '../context/QuizContext';
@@ -6,7 +5,8 @@ import { useSocket } from '../context/SocketContext';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card } from '@/components/ui/card';
-import { Clock, AlertCircle } from 'lucide-react';
+import { Clock, AlertCircle, Timer } from 'lucide-react';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 
 const QuizGame = () => {
@@ -34,12 +34,12 @@ const QuizGame = () => {
   // Watch for time running out
   useEffect(() => {
     if (timeRemaining === 0 && !submitted && !showResults) {
+      setSubmitted(true);
       toast({
         title: "Time's Up!",
         description: "You ran out of time for this question.",
         variant: "destructive",
       });
-      setSubmitted(true);
     }
   }, [timeRemaining, submitted, showResults, toast]);
 
@@ -131,14 +131,30 @@ const QuizGame = () => {
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-quiz-primary" />
-              <span className="font-bold">{timeRemaining}s</span>
+              <span className={`font-bold ${timeRemaining <= 5 ? 'text-red-500 animate-pulse' : ''}`}>
+                {timeRemaining}s
+              </span>
             </div>
             <div>
               Question {currentQuestion + 1} of {questions.length}
             </div>
           </div>
-          <Progress value={(timeRemaining / 15) * 100} className="h-2" />
+          <Progress 
+            value={(timeRemaining / 15) * 100} 
+            className={`h-2 ${timeRemaining <= 5 ? 'bg-red-200' : ''}`} 
+          />
         </div>
+
+        {/* Time's Up Alert */}
+        {timeRemaining === 0 && !showResults && (
+          <Alert variant="destructive" className="mb-4 animate-fade-in">
+            <Timer className="h-4 w-4" />
+            <AlertTitle>Time's Up!</AlertTitle>
+            <AlertDescription>
+              The time has run out for this question.
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Question Card */}
         <Card className="mb-8 p-6 animate-fade-in">

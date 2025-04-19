@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -7,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
+import { Input } from '@/components/ui/input';
 import { ArrowLeft, PlayCircle } from 'lucide-react';
 import { createRoom } from '../services/api';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +18,7 @@ const categories = [
   { value: 'geography', label: 'Geography' },
   { value: 'entertainment', label: 'Entertainment' },
   { value: 'sports', label: 'Sports' },
+  { value: 'custom', label: 'Custom Topic' },
 ];
 
 const difficulties = [
@@ -28,6 +29,7 @@ const difficulties = [
 
 const CreateGame = () => {
   const [category, setCategory] = useState('general');
+  const [customTopic, setCustomTopic] = useState('');
   const [difficulty, setDifficulty] = useState('medium');
   const [questionCount, setQuestionCount] = useState(5);
   const [isCreating, setIsCreating] = useState(false);
@@ -49,7 +51,8 @@ const CreateGame = () => {
     try {
       setIsCreating(true);
       const { roomId } = await createRoom(currentUser.uid, {
-        category,
+        category: category === 'custom' ? 'custom' : category,
+        customTopic: category === 'custom' ? customTopic : undefined,
         difficulty,
         questionCount
       });
@@ -99,6 +102,21 @@ const CreateGame = () => {
               </SelectContent>
             </Select>
           </div>
+
+          {category === 'custom' && (
+            <div className="space-y-2">
+              <label htmlFor="customTopic" className="text-sm font-medium">
+                Enter Your Topic
+              </label>
+              <Input
+                id="customTopic"
+                placeholder="Enter a specific topic (e.g., 'Ancient Rome', 'Jazz Music')"
+                value={customTopic}
+                onChange={(e) => setCustomTopic(e.target.value)}
+                className="w-full"
+              />
+            </div>
+          )}
           
           <div className="space-y-2">
             <label htmlFor="difficulty" className="text-sm font-medium">
@@ -140,7 +158,7 @@ const CreateGame = () => {
             <Button 
               onClick={handleCreateGame} 
               className="quiz-button-primary w-full"
-              disabled={isCreating || !currentUser}
+              disabled={isCreating || !currentUser || (category === 'custom' && !customTopic.trim())}
             >
               {isCreating ? (
                 <span className="flex items-center gap-2">

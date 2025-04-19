@@ -35,6 +35,36 @@
 
     --radius: 0.5rem;
   }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 263 85% 75%;
+    --primary-foreground: 240 5.9% 10%;
+
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --accent: 24 94% 53%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+  }
 }
 
 @layer base {
@@ -55,7 +85,7 @@
   }
 
   .quiz-card {
-    @apply bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden;
+    @apply bg-card rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden;
   }
 
   .quiz-button-primary {
@@ -75,14 +105,15 @@
   }
 
   .answer-option.selected {
-    @apply border-quiz-primary bg-purple-50;
+    @apply border-quiz-primary bg-purple-50 dark:bg-purple-900/20;
   }
 
   .answer-option.correct {
-    @apply border-green-500 bg-green-50;
+    @apply border-green-500 bg-green-50 dark:bg-green-900/20;
   }
 
   .answer-option.incorrect {
-    @apply border-red-500 bg-red-50;
+    @apply border-red-500 bg-red-50 dark:bg-red-900/20;
   }
 }
+

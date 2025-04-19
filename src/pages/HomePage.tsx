@@ -59,12 +59,12 @@ const HomePage = () => {
       </header>
 
       <main className="flex-grow">
-        <section className="bg-gradient-to-br from-quiz-primary/10 to-quiz-secondary/10 py-20">
+        <section className="bg-gradient-to-br from-quiz-primary/10 to-quiz-secondary/10 dark:from-quiz-primary/20 dark:to-quiz-secondary/20 py-20">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-4xl md:text-6xl font-bold mb-6 gradient-heading animate-fade-in">
               Test Your Knowledge in Real-Time
             </h2>
-            <p className="text-xl mb-12 max-w-3xl mx-auto text-gray-700">
+            <p className="text-xl mb-12 max-w-3xl mx-auto text-muted-foreground">
               Join multiplayer quiz games with AI-generated questions. Compete with friends, track your progress, and climb the global leaderboard!
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
@@ -89,41 +89,41 @@ const HomePage = () => {
           </div>
         </section>
 
-        <section className="py-16 bg-white">
+        <section className="py-16 bg-card">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold mb-12 text-center">Game Features</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
               <div className="quiz-card p-6 flex flex-col items-center text-center">
                 <Users className="h-12 w-12 text-quiz-primary mb-4" />
                 <h3 className="text-xl font-semibold mb-2">Multiplayer Rooms</h3>
-                <p className="text-gray-600">Create or join game rooms and play with friends in real-time.</p>
+                <p className="text-muted-foreground">Create or join game rooms and play with friends in real-time.</p>
               </div>
 
               <div className="quiz-card p-6 flex flex-col items-center text-center">
                 <Brain className="h-12 w-12 text-quiz-secondary mb-4" />
                 <h3 className="text-xl font-semibold mb-2">AI-Generated Questions</h3>
-                <p className="text-gray-600">Dynamic questions across various categories powered by Gemini API.</p>
+                <p className="text-muted-foreground">Dynamic questions across various categories powered by Gemini API.</p>
               </div>
 
               <div className="quiz-card p-6 flex flex-col items-center text-center">
                 <Timer className="h-12 w-12 text-quiz-accent mb-4" />
                 <h3 className="text-xl font-semibold mb-2">Timed Rounds</h3>
-                <p className="text-gray-600">Answer quickly to score more points in 15-second rounds.</p>
+                <p className="text-muted-foreground">Answer quickly to score more points in 15-second rounds.</p>
               </div>
 
               <div className="quiz-card p-6 flex flex-col items-center text-center">
                 <Trophy className="h-12 w-12 text-quiz-primary mb-4" />
                 <h3 className="text-xl font-semibold mb-2">Global Leaderboard</h3>
-                <p className="text-gray-600">Compete for the top spot and track your progress over time.</p>
+                <p className="text-muted-foreground">Compete for the top spot and track your progress over time.</p>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="py-16 bg-gradient-to-br from-quiz-primary/10 to-quiz-secondary/10">
+        <section className="py-16 bg-gradient-to-br from-quiz-primary/10 to-quiz-secondary/10 dark:from-quiz-primary/20 dark:to-quiz-secondary/20">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold mb-6">Ready to Challenge Your Friends?</h2>
-            <p className="text-xl mb-8 max-w-2xl mx-auto text-gray-700">
+            <p className="text-xl mb-8 max-w-2xl mx-auto text-muted-foreground">
               Create a game room, invite your friends with a unique code, and start the quiz!
             </p>
             {currentUser && (
@@ -140,7 +140,7 @@ const HomePage = () => {
         </section>
       </main>
 
-      <footer className="bg-gray-800 text-white py-8">
+      <footer className="bg-gray-800 text-white py-8 dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center mb-4 md:mb-0">

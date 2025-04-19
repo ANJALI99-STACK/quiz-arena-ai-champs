@@ -1,3 +1,4 @@
+
 import { 
   collection, 
   addDoc, 
@@ -19,6 +20,7 @@ export const createGameRoom = async (
     category: string;
     difficulty: string;
     questionCount: number;
+    customTopic?: string;
   }
 ) => {
   try {

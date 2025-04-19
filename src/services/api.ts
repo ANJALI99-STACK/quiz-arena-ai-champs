@@ -17,14 +17,18 @@ const generateRoomId = () => {
 const generateMockQuestions = (
   category: string, 
   difficulty: string, 
-  count: number
+  count: number,
+  customTopic?: string
 ): Question[] => {
   const questions = [];
+  
+  // Adjust category name for display if it's a custom topic
+  const displayCategory = customTopic || category;
   
   for (let i = 0; i < count; i++) {
     questions.push({
       id: uuidv4(),
-      text: `Sample ${category} question ${i + 1} (${difficulty} difficulty)`,
+      text: `Sample ${displayCategory} question ${i + 1} (${difficulty} difficulty)`,
       options: [
         `Option A for question ${i + 1}`,
         `Option B for question ${i + 1}`,
@@ -46,6 +50,7 @@ export const createRoom = async (
     category: string;
     difficulty: string;
     questionCount: number;
+    customTopic?: string;
   }
 ) => {
   try {

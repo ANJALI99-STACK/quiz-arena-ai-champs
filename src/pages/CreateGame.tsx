@@ -6,6 +6,7 @@ import { useQuiz } from '../context/QuizContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 import { ArrowLeft, PlayCircle } from 'lucide-react';
 import { createRoom } from '../services/api';
 import { useToast } from '@/hooks/use-toast';
@@ -28,6 +29,7 @@ const difficulties = [
 const CreateGame = () => {
   const [category, setCategory] = useState('general');
   const [difficulty, setDifficulty] = useState('medium');
+  const [questionCount, setQuestionCount] = useState(5);
   const [isCreating, setIsCreating] = useState(false);
   const { currentUser } = useAuth();
   const { setRoomId, setIsHost } = useQuiz();
@@ -49,7 +51,7 @@ const CreateGame = () => {
       const { roomId } = await createRoom(currentUser.uid, {
         category,
         difficulty,
-        questionCount: 5
+        questionCount
       });
       
       setRoomId(roomId);
@@ -117,6 +119,21 @@ const CreateGame = () => {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="questionCount" className="text-sm font-medium">
+              Number of Questions: {questionCount}
+            </label>
+            <Slider
+              id="questionCount"
+              min={3}
+              max={15}
+              step={1}
+              value={[questionCount]}
+              onValueChange={(value) => setQuestionCount(value[0])}
+              className="py-4"
+            />
           </div>
 
           <div className="pt-2">

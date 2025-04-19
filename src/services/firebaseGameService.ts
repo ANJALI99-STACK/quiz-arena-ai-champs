@@ -1,4 +1,3 @@
-
 import { 
   collection, 
   addDoc, 
@@ -8,7 +7,8 @@ import {
   setDoc,
   query,
   where,
-  getDocs
+  getDocs,
+  arrayUnion
 } from 'firebase/firestore';
 import { firestore } from '../firebase/config';
 import { Question, PlayerScore } from '../context/QuizContext';
@@ -46,7 +46,7 @@ export const joinGameRoom = async (roomId: string, player: {
     const roomRef = doc(firestore, 'gameRooms', roomId);
     
     await updateDoc(roomRef, {
-      players: firebase.firestore.FieldValue.arrayUnion(player)
+      players: arrayUnion(player)
     });
 
     return true;

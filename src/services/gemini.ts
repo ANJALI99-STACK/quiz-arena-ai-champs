@@ -1,10 +1,9 @@
-
 import { Question } from '../context/QuizContext';
 import { v4 as uuidv4 } from 'uuid';
+import { GEMINI_CONFIG, validateGeminiResponse, parseGeminiResponse } from '../config/geminiConfig';
 
 // In production, this would be an environment variable
 const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY';
-const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
 
 // Helper function to generate mock questions
 const generateMockQuestions = (
@@ -105,19 +104,9 @@ export const generateQuizQuestions = async (
       return generateMockQuestions(category, difficulty, count);
     }
     
-    const prompt = `Generate ${count} multiple-choice trivia questions about ${category} at ${difficulty} difficulty level. Each question should have 4 options with one correct answer. Format as JSON with this structure:
-    [
-      {
-        "id": "unique_id",
-        "text": "question text",
-        "options": ["option1", "option2", "option3", "option4"],
-        "correctAnswer": "correct option text",
-        "category": "${category}",
-        "difficulty": "${difficulty}"
-      }
-    ]`;
+    const prompt = GEMINI_CONFIG.questionGeneration.systemPrompt(category, difficulty, count);
 
-    const response = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`${GEMINI_CONFIG.apiEndpoint}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -132,10 +121,7 @@ export const generateQuizQuestions = async (
             ]
           }
         ],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 2048,
-        }
+        generationConfig: GEMINI_CONFIG.defaultParams
       })
     });
 
@@ -152,13 +138,14 @@ export const generateQuizQuestions = async (
       return generateMockQuestions(category, difficulty, count);
     }
     
-    // Extract the JSON string from the response and parse it
-    const text = data.candidates[0].content.parts[0].text;
-    const jsonStart = text.indexOf('[');
-    const jsonEnd = text.lastIndexOf(']') + 1;
-    const jsonString = text.substring(jsonStart, jsonEnd);
+    const parsedQuestions = parseGeminiResponse(data.candidates[0].content.parts[0].text);
     
-    return JSON.parse(jsonString);
+    if (!parsedQuestions || !validateGeminiResponse(parsedQuestions)) {
+      console.warn('Invalid question format, falling back to mock questions');
+      return generateMockQuestions(category, difficulty, count);
+    }
+    
+    return parsedQuestions;
   } catch (error) {
     console.error('Failed to generate quiz questions:', error);
     console.log('Falling back to mock questions due to error');
@@ -192,7 +179,7 @@ export const generateGameFeedback = async (
     They scored ${playerStats.score} points, getting ${playerStats.correctAnswers} correct answers out of ${playerStats.totalQuestions} questions.
     Keep it encouraging, positive, and around 3-4 sentences. Avoid generic phrases like "keep up the good work" and make it feel personalized.`;
 
-    const response = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`${GEMINI_CONFIG.apiEndpoint}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -207,10 +194,7 @@ export const generateGameFeedback = async (
             ]
           }
         ],
-        generationConfig: {
-          temperature: 0.8,
-          maxOutputTokens: 1024,
-        }
+        generationConfig: GEMINI_CONFIG.defaultParams
       })
     });
 

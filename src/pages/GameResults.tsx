@@ -264,8 +264,8 @@ const GameResults = () => {
                     key={player.userId} 
                     className={`grid grid-cols-12 p-3 items-center ${player.userId === currentUser?.uid ? 'bg-purple-50 dark:bg-purple-900/40' : ''}`}
                   >
-                    <div className="col-span-1 text-center font-medium">{index + 1}</div>
-                    <div className="col-span-7 flex items-center gap-2">
+                    <div className="col-span-1 text-center font-medium text-foreground">{index + 1}</div>
+                    <div className="col-span-7 flex items-center gap-2 text-foreground">
                       <div className="h-8 w-8 rounded-full overflow-hidden">
                         <img 
                           src={player.photoURL || 'https://via.placeholder.com/32'} 
@@ -273,15 +273,15 @@ const GameResults = () => {
                           className="h-full w-full object-cover"
                         />
                       </div>
-                      <span className="truncate text-gray-900 dark:text-gray-100">{player.name}</span>
+                      <span className="truncate text-foreground">{player.name}</span>
                       {player.userId === currentUser?.uid && (
                         <span className="text-xs text-gray-500 dark:text-gray-400">(You)</span>
                       )}
                     </div>
-                    <div className="col-span-2 text-center text-gray-900 dark:text-gray-100">
+                    <div className="col-span-2 text-center text-foreground">
                       {player.correctAnswers}/{questions.length}
                     </div>
-                    <div className="col-span-2 text-right font-bold text-gray-900 dark:text-gray-100">{player.score}</div>
+                    <div className="col-span-2 text-right font-bold text-foreground">{player.score}</div>
                   </div>
                 ))}
               </div>

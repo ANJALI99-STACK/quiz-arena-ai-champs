@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuiz } from '../context/QuizContext';
@@ -125,11 +126,11 @@ const QuizGame = () => {
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-quiz-primary" />
-              <span className={`font-bold ${timeRemaining <= 5 ? 'text-red-500 animate-pulse' : ''}`}>
+              <span className={`font-bold ${timeRemaining <= 5 ? 'text-red-500 animate-pulse' : 'text-foreground'}`}>
                 {timeRemaining}s
               </span>
             </div>
-            <div>
+            <div className="text-foreground">
               Question {currentQuestion + 1} of {questions.length}
             </div>
           </div>
@@ -150,7 +151,7 @@ const QuizGame = () => {
         )}
 
         <Card className="mb-8 p-6 animate-fade-in">
-          <h2 className="text-xl md:text-2xl font-semibold mb-4">{questionData.text}</h2>
+          <h2 className="text-xl md:text-2xl font-semibold mb-4 text-foreground">{questionData.text}</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             {questionData.options.map((option, index) => {
@@ -176,7 +177,7 @@ const QuizGame = () => {
                     <div className="flex-shrink-0 w-6 h-6 rounded-full bg-muted flex items-center justify-center mr-3">
                       {String.fromCharCode(65 + index)}
                     </div>
-                    <div>{option}</div>
+                    <div className="text-foreground">{option}</div>
                   </div>
                 </div>
               );
@@ -196,8 +197,8 @@ const QuizGame = () => {
           )}
 
           {showResults && correctAnswer && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
-              <p className="font-medium text-green-800">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4 dark:bg-green-900/20 dark:border-green-700">
+              <p className="font-medium text-green-800 dark:text-green-400">
                 Correct answer: {correctAnswer}
               </p>
             </div>
@@ -206,16 +207,16 @@ const QuizGame = () => {
 
         {submitted && !showResults && (
           <div className="text-center animate-pulse-light">
-            <div className="inline-flex items-center gap-2 bg-white rounded-lg px-4 py-2">
+            <div className="inline-flex items-center gap-2 bg-white dark:bg-gray-700 rounded-lg px-4 py-2">
               <AlertCircle className="h-5 w-5 text-quiz-primary" />
-              <span>Waiting for other players to answer...</span>
+              <span className="text-foreground">Waiting for other players to answer...</span>
             </div>
           </div>
         )}
 
         {showResults && (
           <div className="animate-fade-in">
-            <h3 className="text-xl font-semibold mb-4 text-foreground dark:text-white">Current Standings</h3>
+            <h3 className="text-xl font-semibold mb-4 text-foreground">Current Standings</h3>
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
               <div className="grid grid-cols-12 bg-gray-100 dark:bg-gray-700 p-3 font-medium text-gray-700 dark:text-gray-200">
                 <div className="col-span-1 text-center">#</div>
@@ -227,7 +228,7 @@ const QuizGame = () => {
                 {playerScores
                   .sort((a, b) => b.score - a.score)
                   .map((player, index) => (
-                    <div key={player.userId} className="grid grid-cols-12 p-3 items-center">
+                    <div key={player.userId} className="grid grid-cols-12 p-3 items-center text-foreground">
                       <div className="col-span-1 text-center font-medium">{index + 1}</div>
                       <div className="col-span-7 flex items-center gap-2">
                         <div className="h-8 w-8 rounded-full overflow-hidden">
@@ -255,3 +256,4 @@ const QuizGame = () => {
 };
 
 export default QuizGame;
+

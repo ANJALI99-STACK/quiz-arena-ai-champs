@@ -31,7 +31,6 @@ const QuizGame = () => {
   const [showResults, setShowResults] = useState(false);
   const [correctAnswer, setCorrectAnswer] = useState<string | null>(null);
 
-  // Watch for time running out
   useEffect(() => {
     if (timeRemaining === 0 && !submitted && !showResults) {
       setSubmitted(true);
@@ -43,21 +42,18 @@ const QuizGame = () => {
     }
   }, [timeRemaining, submitted, showResults, toast]);
 
-  // Redirect if no questions loaded
   useEffect(() => {
     if (!questions || questions.length === 0) {
       navigate('/');
     }
   }, [questions, navigate]);
 
-  // Reset game state when component mounts
   useEffect(() => {
     setSubmitted(false);
     setShowResults(false);
     setCorrectAnswer(null);
   }, []);
 
-  // Initialize timer and listeners when component mounts
   useEffect(() => {
     if (!socket || !roomId) return;
 
@@ -113,20 +109,18 @@ const QuizGame = () => {
       roomId,
       questionIndex: currentQuestion,
       selectedAnswer,
-      questions // Pass the entire questions array to the mock socket
+      questions
     });
 
     setSubmitted(true);
   };
 
-  // Get current question
   const questionData = questions[currentQuestion];
   if (!questionData) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-quiz-primary/10 to-quiz-secondary/10 p-4">
       <div className="container mx-auto max-w-4xl py-8">
-        {/* Timer and Progress */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
@@ -145,7 +139,6 @@ const QuizGame = () => {
           />
         </div>
 
-        {/* Time's Up Alert */}
         {timeRemaining === 0 && !showResults && (
           <Alert variant="destructive" className="mb-4 animate-fade-in">
             <Timer className="h-4 w-4" />
@@ -156,7 +149,6 @@ const QuizGame = () => {
           </Alert>
         )}
 
-        {/* Question Card */}
         <Card className="mb-8 p-6 animate-fade-in">
           <h2 className="text-xl md:text-2xl font-semibold mb-4">{questionData.text}</h2>
           
@@ -212,7 +204,6 @@ const QuizGame = () => {
           )}
         </Card>
 
-        {/* Waiting Message */}
         {submitted && !showResults && (
           <div className="text-center animate-pulse-light">
             <div className="inline-flex items-center gap-2 bg-white rounded-lg px-4 py-2">
@@ -222,12 +213,11 @@ const QuizGame = () => {
           </div>
         )}
 
-        {/* Live Scoreboard */}
         {showResults && (
           <div className="animate-fade-in">
-            <h3 className="text-xl font-semibold mb-4">Current Standings</h3>
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="grid grid-cols-12 bg-gray-100 p-3 font-medium">
+            <h3 className="text-xl font-semibold mb-4 text-foreground dark:text-white">Current Standings</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+              <div className="grid grid-cols-12 bg-gray-100 dark:bg-gray-700 p-3 font-medium text-gray-700 dark:text-gray-200">
                 <div className="col-span-1 text-center">#</div>
                 <div className="col-span-7">Player</div>
                 <div className="col-span-2 text-center">Correct</div>

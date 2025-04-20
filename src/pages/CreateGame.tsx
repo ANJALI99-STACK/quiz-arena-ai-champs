@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -50,12 +51,18 @@ const CreateGame = () => {
 
     try {
       setIsCreating(true);
-      const { roomId } = await createRoom(currentUser.uid, {
+      
+      // Save game settings to localStorage
+      const gameSettings = {
         category: category === 'custom' ? 'custom' : category,
         customTopic: category === 'custom' ? customTopic : undefined,
         difficulty,
         questionCount
-      });
+      };
+      
+      localStorage.setItem('quizGameSettings', JSON.stringify(gameSettings));
+      
+      const { roomId } = await createRoom(currentUser.uid, gameSettings);
       
       setRoomId(roomId);
       setIsHost(true);

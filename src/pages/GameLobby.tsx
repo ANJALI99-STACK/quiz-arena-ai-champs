@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -26,6 +27,20 @@ const GameLobby = () => {
   const { isHost, setQuestions, setCurrentQuestion, setTimeRemaining, setSelectedAnswer, setGameStatus } = useQuiz();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [settings, setSettings] = useState<{
+    category: string;
+    difficulty: string;
+    questionCount: number;
+    customTopic?: string;
+  }>(() => {
+    // Retrieve game settings from localStorage
+    const savedSettings = localStorage.getItem('quizGameSettings');
+    return savedSettings ? JSON.parse(savedSettings) : {
+      category: 'general',
+      difficulty: 'medium',
+      questionCount: 5
+    };
+  });
 
   useEffect(() => {
     if (!currentUser) {
@@ -81,8 +96,12 @@ const GameLobby = () => {
     try {
       setLoading(true);
       
-      // Get mock questions from our modified service that handles API failures
-      const questions = await generateQuizQuestions('general', 'medium', 5);
+      // Get questions from our service using the stored settings
+      const questions = await generateQuizQuestions(
+        settings.category, 
+        settings.difficulty, 
+        settings.questionCount
+      );
       
       socket.emit('start-game', { roomId, questions });
       setQuestions(questions);

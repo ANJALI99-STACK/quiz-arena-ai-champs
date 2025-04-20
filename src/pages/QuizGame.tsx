@@ -209,14 +209,14 @@ const QuizGame = () => {
           <div className="text-center animate-pulse-light">
             <div className="inline-flex items-center gap-2 bg-white dark:bg-gray-700 rounded-lg px-4 py-2">
               <AlertCircle className="h-5 w-5 text-quiz-primary" />
-              <span className="text-foreground">Waiting for other players to answer...</span>
+              <span className="text-foreground dark:text-white">Waiting for other players to answer...</span>
             </div>
           </div>
         )}
 
         {showResults && (
           <div className="animate-fade-in">
-            <h3 className="text-xl font-semibold mb-4 text-foreground">Current Standings</h3>
+            <h3 className="text-xl font-semibold mb-4 text-foreground dark:text-white">Current Standings</h3>
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
               <div className="grid grid-cols-12 bg-gray-100 dark:bg-gray-700 p-3 font-medium text-gray-700 dark:text-gray-200">
                 <div className="col-span-1 text-center">#</div>
@@ -228,7 +228,7 @@ const QuizGame = () => {
                 {playerScores
                   .sort((a, b) => b.score - a.score)
                   .map((player, index) => (
-                    <div key={player.userId} className="grid grid-cols-12 p-3 items-center text-foreground">
+                    <div key={player.userId} className="grid grid-cols-12 p-3 items-center text-foreground dark:text-white">
                       <div className="col-span-1 text-center font-medium">{index + 1}</div>
                       <div className="col-span-7 flex items-center gap-2">
                         <div className="h-8 w-8 rounded-full overflow-hidden">
@@ -256,4 +256,3 @@ const QuizGame = () => {
 };
 
 export default QuizGame;
-

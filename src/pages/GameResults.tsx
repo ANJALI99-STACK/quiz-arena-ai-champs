@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuiz } from '../context/QuizContext';
@@ -17,6 +18,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { useToast } from '@/hooks/use-toast';
 
 const GameResults = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -27,6 +29,7 @@ const GameResults = () => {
   } = useQuiz();
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [feedback, setFeedback] = useState('');
   const [loading, setLoading] = useState(true);
   const [showDetails, setShowDetails] = useState(false);
@@ -36,6 +39,17 @@ const GameResults = () => {
       navigate('/');
     }
   }, [playerScores, navigate]);
+
+  // Show alert if questions.length mismatches the expected count (guessing 3 for example)
+  useEffect(() => {
+    if (questions.length !== 0 && questions.length !== 3) {
+      toast({
+        title: "Question count mismatch",
+        description: `Expected 3 questions, but received ${questions.length}.`,
+        variant: "destructive"
+      });
+    }
+  }, [questions, toast]);
 
   useEffect(() => {
     const saveResults = async () => {
@@ -122,14 +136,14 @@ const GameResults = () => {
       <div className="container mx-auto max-w-4xl py-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-bold gradient-heading mb-2">Game Results</h1>
-          <p className="text-gray-600">See how you did and where you stand!</p>
+          <p className="text-gray-600 dark:text-gray-300">See how you did and where you stand!</p>
         </div>
 
         <div className="mb-12">
           <div className="relative h-48 md:h-56 flex items-end justify-center mb-6">
             {sortedPlayers.length > 1 && (
               <div className="absolute left-1/4 transform -translate-x-1/2 bottom-0 text-center z-10">
-                <div className="bg-gray-100 border-2 border-gray-300 w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden mx-auto mb-2">
+                <div className="bg-gray-100 border-2 border-gray-300 dark:bg-gray-700 dark:border-gray-600 w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden mx-auto mb-2">
                   <img 
                     src={sortedPlayers[1].photoURL || 'https://via.placeholder.com/112'} 
                     alt={sortedPlayers[1].name}
@@ -139,8 +153,8 @@ const GameResults = () => {
                 <div className="bg-quiz-secondary text-white rounded-full w-8 h-8 flex items-center justify-center mx-auto mb-1">
                   <Medal className="h-5 w-5" />
                 </div>
-                <p className="font-semibold text-sm md:text-base truncate max-w-[120px]">{sortedPlayers[1].name}</p>
-                <p className="font-bold">{sortedPlayers[1].score}</p>
+                <p className="font-semibold text-sm md:text-base truncate max-w-[120px] text-gray-800 dark:text-gray-100">{sortedPlayers[1].name}</p>
+                <p className="font-bold text-gray-900 dark:text-white">{sortedPlayers[1].score}</p>
               </div>
             )}
             
@@ -149,21 +163,21 @@ const GameResults = () => {
                 <div className="bg-quiz-primary text-white rounded-full w-8 h-8 flex items-center justify-center mx-auto mb-1">
                   <Trophy className="h-5 w-5" />
                 </div>
-                <div className="bg-yellow-100 border-2 border-yellow-400 w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden mx-auto mb-2 shadow-lg">
+                <div className="bg-yellow-100 border-2 border-yellow-400 dark:bg-yellow-700 w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden mx-auto mb-2 shadow-lg">
                   <img 
                     src={sortedPlayers[0].photoURL || 'https://via.placeholder.com/144'} 
                     alt={sortedPlayers[0].name}
                     className="h-full w-full object-cover"
                   />
                 </div>
-                <p className="font-semibold text-lg truncate max-w-[120px] mx-auto">{sortedPlayers[0].name}</p>
-                <p className="font-bold text-xl">{sortedPlayers[0].score}</p>
+                <p className="font-semibold text-lg truncate max-w-[120px] mx-auto text-gray-900 dark:text-white">{sortedPlayers[0].name}</p>
+                <p className="font-bold text-xl text-gray-900 dark:text-white">{sortedPlayers[0].score}</p>
               </div>
             )}
             
             {sortedPlayers.length > 2 && (
               <div className="absolute left-3/4 transform -translate-x-1/2 bottom-0 text-center z-10">
-                <div className="bg-gray-100 border-2 border-gray-300 w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden mx-auto mb-2">
+                <div className="bg-gray-100 border-2 border-gray-300 dark:bg-gray-700 dark:border-gray-600 w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden mx-auto mb-2">
                   <img 
                     src={sortedPlayers[2].photoURL || 'https://via.placeholder.com/112'} 
                     alt={sortedPlayers[2].name}
@@ -173,8 +187,8 @@ const GameResults = () => {
                 <div className="bg-orange-500 text-white rounded-full w-8 h-8 flex items-center justify-center mx-auto mb-1">
                   <Award className="h-5 w-5" />
                 </div>
-                <p className="font-semibold text-sm md:text-base truncate max-w-[120px]">{sortedPlayers[2].name}</p>
-                <p className="font-bold">{sortedPlayers[2].score}</p>
+                <p className="font-semibold text-sm md:text-base truncate max-w-[120px] text-gray-800 dark:text-gray-100">{sortedPlayers[2].name}</p>
+                <p className="font-bold text-gray-900 dark:text-white">{sortedPlayers[2].score}</p>
               </div>
             )}
           </div>
@@ -185,7 +199,7 @@ const GameResults = () => {
             <CardContent className="p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="h-5 w-5 text-quiz-primary" />
-                <h2 className="text-xl font-semibold">Your Performance</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Your Performance</h2>
               </div>
               
               {loading ? (
@@ -195,31 +209,31 @@ const GameResults = () => {
               ) : (
                 <>
                   <div className="flex flex-col md:flex-row items-center md:items-stretch gap-6 mb-4">
-                    <div className="bg-purple-50 rounded-xl p-4 flex-1 flex flex-col items-center justify-center">
-                      <p className="text-sm text-gray-500 mb-1">Your Position</p>
-                      <p className="text-3xl font-bold text-quiz-primary">{getCurrentPlayerPosition()}</p>
-                      <p className="text-sm text-gray-500">of {playerScores.length}</p>
+                    <div className="bg-purple-50 rounded-xl p-4 flex-1 flex flex-col items-center justify-center dark:bg-purple-900/50">
+                      <p className="text-sm text-gray-500 dark:text-gray-300 mb-1">Your Position</p>
+                      <p className="text-3xl font-bold text-quiz-primary dark:text-purple-300">{getCurrentPlayerPosition()}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-300">of {playerScores.length}</p>
                     </div>
                     
-                    <div className="bg-purple-50 rounded-xl p-4 flex-1 flex flex-col items-center justify-center">
-                      <p className="text-sm text-gray-500 mb-1">Score</p>
-                      <p className="text-3xl font-bold text-quiz-primary">
+                    <div className="bg-purple-50 rounded-xl p-4 flex-1 flex flex-col items-center justify-center dark:bg-purple-900/50">
+                      <p className="text-sm text-gray-500 dark:text-gray-300 mb-1">Score</p>
+                      <p className="text-3xl font-bold text-quiz-primary dark:text-purple-300">
                         {playerScores.find(p => p.userId === currentUser.uid)?.score || 0}
                       </p>
-                      <p className="text-sm text-gray-500">points</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-300">points</p>
                     </div>
                     
-                    <div className="bg-purple-50 rounded-xl p-4 flex-1 flex flex-col items-center justify-center">
-                      <p className="text-sm text-gray-500 mb-1">Correct Answers</p>
-                      <p className="text-3xl font-bold text-quiz-primary">
+                    <div className="bg-purple-50 rounded-xl p-4 flex-1 flex flex-col items-center justify-center dark:bg-purple-900/50">
+                      <p className="text-sm text-gray-500 dark:text-gray-300 mb-1">Correct Answers</p>
+                      <p className="text-3xl font-bold text-quiz-primary dark:text-purple-300">
                         {playerScores.find(p => p.userId === currentUser.uid)?.correctAnswers || 0}
                       </p>
-                      <p className="text-sm text-gray-500">of {questions.length}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-300">of {questions.length}</p>
                     </div>
                   </div>
                   
-                  <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-4 rounded-lg">
-                    <p className="italic">{feedback}</p>
+                  <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-4 rounded-lg dark:from-purple-900/40 dark:to-indigo-900/40">
+                    <p className="italic text-gray-700 dark:text-gray-300">{feedback}</p>
                   </div>
                 </>
               )}
@@ -237,8 +251,8 @@ const GameResults = () => {
           </button>
           
           {showDetails && (
-            <div className="bg-white rounded-lg shadow overflow-hidden animate-fade-in">
-              <div className="grid grid-cols-12 bg-gray-100 p-3 font-medium">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden animate-fade-in">
+              <div className="grid grid-cols-12 bg-gray-100 dark:bg-gray-700 p-3 font-medium text-gray-700 dark:text-gray-200">
                 <div className="col-span-1 text-center">#</div>
                 <div className="col-span-7">Player</div>
                 <div className="col-span-2 text-center">Correct</div>
@@ -248,7 +262,7 @@ const GameResults = () => {
                 {sortedPlayers.map((player, index) => (
                   <div 
                     key={player.userId} 
-                    className={`grid grid-cols-12 p-3 items-center ${player.userId === currentUser?.uid ? 'bg-purple-50' : ''}`}
+                    className={`grid grid-cols-12 p-3 items-center ${player.userId === currentUser?.uid ? 'bg-purple-50 dark:bg-purple-900/40' : ''}`}
                   >
                     <div className="col-span-1 text-center font-medium">{index + 1}</div>
                     <div className="col-span-7 flex items-center gap-2">
@@ -259,15 +273,15 @@ const GameResults = () => {
                           className="h-full w-full object-cover"
                         />
                       </div>
-                      <span className="truncate">{player.name}</span>
+                      <span className="truncate text-gray-900 dark:text-gray-100">{player.name}</span>
                       {player.userId === currentUser?.uid && (
-                        <span className="text-xs text-gray-500">(You)</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">(You)</span>
                       )}
                     </div>
-                    <div className="col-span-2 text-center">
+                    <div className="col-span-2 text-center text-gray-900 dark:text-gray-100">
                       {player.correctAnswers}/{questions.length}
                     </div>
-                    <div className="col-span-2 text-right font-bold">{player.score}</div>
+                    <div className="col-span-2 text-right font-bold text-gray-900 dark:text-gray-100">{player.score}</div>
                   </div>
                 ))}
               </div>
@@ -297,3 +311,4 @@ const GameResults = () => {
 };
 
 export default GameResults;
+

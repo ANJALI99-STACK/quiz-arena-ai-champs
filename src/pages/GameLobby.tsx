@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -33,7 +32,6 @@ const GameLobby = () => {
     questionCount: number;
     customTopic?: string;
   }>(() => {
-    // Retrieve game settings from localStorage
     const savedSettings = localStorage.getItem('quizGameSettings');
     return savedSettings ? JSON.parse(savedSettings) : {
       category: 'general',
@@ -48,7 +46,6 @@ const GameLobby = () => {
       return;
     }
 
-    // Reset game state when entering the lobby
     setCurrentQuestion(0);
     setTimeRemaining(15);
     setSelectedAnswer(null);
@@ -96,7 +93,6 @@ const GameLobby = () => {
     try {
       setLoading(true);
       
-      // Get questions from our service using the stored settings
       const questions = await generateQuizQuestions(
         settings.category, 
         settings.difficulty, 
@@ -122,7 +118,7 @@ const GameLobby = () => {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold gradient-heading mb-2">Game Lobby</h1>
           <div className="flex items-center justify-center gap-2 mb-6">
-            <div className="text-lg font-semibold bg-white px-4 py-2 rounded-lg border">
+            <div className="text-lg font-semibold bg-white dark:bg-gray-800 dark:border-gray-700 border border-gray-200 dark:text-white px-4 py-2 rounded-lg">
               Room Code: <span className="font-mono">{roomId}</span>
             </div>
             <Button

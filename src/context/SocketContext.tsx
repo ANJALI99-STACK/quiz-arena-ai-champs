@@ -1,6 +1,9 @@
-
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
+
+// Shared rooms storage to simulate server-side room data
+// This will allow different socket instances to share room data
+const mockGameRooms = new Map();
 
 // Mock Socket interface to match Socket.io-client's interface
 interface MockSocket {
@@ -15,11 +18,8 @@ interface MockSocket {
 // Create a mock socket implementation
 const createMockSocket = (userId: string, userName: string, userPhoto: string): MockSocket => {
   const eventHandlers: Record<string, Function[]> = {};
-  let playerScore = 0;
-  let correctAnswersCount = 0;
-  let answeredQuestionsCount = 0;
+  let currentRoomId: string | null = null;
   let timerInterval: NodeJS.Timeout | null = null;
-  let currentGameQuestions: any[] = [];
   
   return {
     id: `mock-socket-${Math.random().toString(36).substring(2, 9)}`,
@@ -49,34 +49,66 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
       setTimeout(() => {
         switch (event) {
           case 'join-room':
+            currentRoomId = data.roomId;
+            
+            // Create room if it doesn't exist
+            if (!mockGameRooms.has(currentRoomId)) {
+              mockGameRooms.set(currentRoomId, {
+                players: [],
+                questions: [],
+                hostId: userId, // First player to join is the host
+                currentQuestion: 0,
+                playerScores: [],
+                gameStarted: false
+              });
+            }
+            
+            const room = mockGameRooms.get(currentRoomId);
+            
+            // Add player if not already in the room
+            if (!room.players.find((p: any) => p.id === userId)) {
+              room.players.push({ 
+                id: userId, 
+                name: userName, 
+                photoURL: userPhoto,
+                score: 0,
+                correctAnswers: 0,
+                answeredQuestions: 0
+              });
+            }
+            
+            // Notify all connected players about the new player
             if (eventHandlers['player-joined']) {
               eventHandlers['player-joined'].forEach(callback => 
-                callback({ 
-                  players: [
-                    { 
-                      id: userId, 
-                      name: userName, 
-                      photoURL: userPhoto,
-                      score: 0
-                    }
-                  ] 
-                })
+                callback({ players: room.players })
               );
             }
             break;
             
           case 'start-game':
-            // Store questions for this game session
-            currentGameQuestions = [...data.questions];
+            if (!currentRoomId) break;
             
-            // Reset game state for a new game
-            playerScore = 0;
-            correctAnswersCount = 0;
-            answeredQuestionsCount = 0;
+            const startRoom = mockGameRooms.get(currentRoomId);
+            if (!startRoom) break;
+            
+            // Store questions and mark game as started
+            startRoom.questions = [...data.questions];
+            startRoom.gameStarted = true;
+            startRoom.currentQuestion = 0;
+            
+            // Reset player scores
+            startRoom.playerScores = startRoom.players.map((player: any) => ({
+              userId: player.id,
+              name: player.name,
+              photoURL: player.photoURL,
+              score: 0,
+              correctAnswers: 0,
+              answeredQuestions: 0
+            }));
             
             if (eventHandlers['game-started']) {
               eventHandlers['game-started'].forEach(callback => 
-                callback({ questions: currentGameQuestions })
+                callback({ questions: startRoom.questions })
               );
             }
             
@@ -90,6 +122,17 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
               let timeLeft = 15;
               timerInterval = setInterval(() => {
                 timeLeft--;
+                
+                // If room was deleted or game ended, clear timer
+                if (!mockGameRooms.has(currentRoomId) || 
+                    !mockGameRooms.get(currentRoomId).gameStarted) {
+                  if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                  }
+                  return;
+                }
+                
                 eventHandlers['timer-update'].forEach(callback => callback({ timeLeft }));
                 
                 if (timeLeft <= 0) {
@@ -98,119 +141,47 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
                     timerInterval = null;
                   }
                   
-                  // Question timed out - count as answered but not correct
-                  answeredQuestionsCount++;
-                  
-                  // Simulate question ended event
-                  if (eventHandlers['question-ended']) {
-                    eventHandlers['question-ended'].forEach(callback => 
-                      callback({
-                        correctAnswer: currentGameQuestions[0].correctAnswer,
-                        scores: [
-                          {
-                            userId,
-                            name: userName,
-                            photoURL: userPhoto,
-                            score: playerScore,
-                            correctAnswers: correctAnswersCount,
-                            answeredQuestions: answeredQuestionsCount
-                          }
-                        ]
-                      })
-                    );
-                  }
-                  
-                  // Move to next question after 5 seconds
-                  setTimeout(() => {
-                    if (eventHandlers['next-question']) {
-                      eventHandlers['next-question'].forEach(callback => 
-                        callback({ questionIndex: 1 })
-                      );
-                      
-                      // Start timer for next question
-                      startTimerForQuestion(1);
-                    }
-                  }, 5000);
+                  // Handle question timeout for this player
+                  handleQuestionEnd(currentRoomId, 0, null);
                 }
               }, 1000);
             }
             break;
             
           case 'submit-answer':
-            // Clear the running timer when an answer is submitted
-            if (timerInterval) {
-              clearInterval(timerInterval);
-              timerInterval = null;
-            }
+            if (!currentRoomId) break;
             
-            // Since this is single player mode, immediately trigger the question-ended event
-            if (eventHandlers['question-ended']) {
-              const correctAnswer = currentGameQuestions[data.questionIndex].correctAnswer;
-              const isCorrect = data.selectedAnswer === correctAnswer;
-              
-              // Update score and counters
-              answeredQuestionsCount++;
-              if (isCorrect) {
-                correctAnswersCount++;
-                playerScore += 100;
-              }
-              
-              // Short delay to make it feel more natural
-              setTimeout(() => {
-                eventHandlers['question-ended'].forEach(callback => 
-                  callback({
-                    correctAnswer: correctAnswer,
-                    scores: [
-                      {
-                        userId,
-                        name: userName,
-                        photoURL: userPhoto,
-                        score: playerScore,
-                        correctAnswers: correctAnswersCount,
-                        answeredQuestions: answeredQuestionsCount
-                      }
-                    ]
-                  })
-                );
-                
-                // Move to next question after a short delay
-                setTimeout(() => {
-                  if (eventHandlers['next-question']) {
-                    const nextIndex = data.questionIndex + 1;
-                    
-                    // If we've reached the last question, end the game
-                    if (nextIndex >= currentGameQuestions.length) {
-                      if (eventHandlers['game-ended']) {
-                        eventHandlers['game-ended'].forEach(callback => callback());
-                      }
-                    } else {
-                      eventHandlers['next-question'].forEach(callback => 
-                        callback({ questionIndex: nextIndex })
-                      );
-                      
-                      // Start timer for next question
-                      startTimerForQuestion(nextIndex);
-                    }
-                  }
-                }, 3000);
-              }, 1000);
-            }
+            // Handle player's answer submission
+            handleQuestionEnd(currentRoomId, data.questionIndex, data.selectedAnswer);
             break;
             
           case 'leave-room':
+            if (!currentRoomId) break;
+            
             // Clear any running timer
             if (timerInterval) {
               clearInterval(timerInterval);
               timerInterval = null;
             }
             
-            if (eventHandlers['player-left']) {
-              eventHandlers['player-left'].forEach(callback => 
-                callback({ 
-                  players: [] 
-                })
-              );
+            // Remove player from room
+            const leaveRoom = mockGameRooms.get(currentRoomId);
+            if (leaveRoom) {
+              leaveRoom.players = leaveRoom.players.filter((p: any) => p.id !== userId);
+              
+              // If room is empty, delete it
+              if (leaveRoom.players.length === 0) {
+                mockGameRooms.delete(currentRoomId);
+              } 
+              // Otherwise notify remaining players
+              else if (eventHandlers['player-left']) {
+                eventHandlers['player-left'].forEach(callback => 
+                  callback({ players: leaveRoom.players })
+                );
+              }
             }
+            
+            currentRoomId = null;
             break;
           
           default:
@@ -219,22 +190,120 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
       }, 300); // Simulate network delay
     },
     disconnect: () => {
+      // Clean up on disconnect
+      if (currentRoomId) {
+        const disconnectRoom = mockGameRooms.get(currentRoomId);
+        if (disconnectRoom) {
+          disconnectRoom.players = disconnectRoom.players.filter((p: any) => p.id !== userId);
+          
+          // If room is empty, delete it
+          if (disconnectRoom.players.length === 0) {
+            mockGameRooms.delete(currentRoomId);
+          }
+        }
+      }
+      
       // Clear any running timer
       if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
       }
+      
       console.log('[Mock Socket] Disconnected');
     }
   };
   
-  // Helper function to start timer for a specific question
-  function startTimerForQuestion(questionIndex: number) {
+  // Helper function to handle question end (timeout or answer submission)
+  function handleQuestionEnd(roomId: string, questionIndex: number, selectedAnswer: string | null) {
+    const room = mockGameRooms.get(roomId);
+    if (!room || !room.gameStarted) return;
+    
+    const questionData = room.questions[questionIndex];
+    const correctAnswer = questionData.correctAnswer;
+    
+    // Find or create player score
+    let playerScore = room.playerScores.find((score: any) => score.userId === userId);
+    if (!playerScore) {
+      playerScore = {
+        userId,
+        name: userName,
+        photoURL: userPhoto,
+        score: 0,
+        correctAnswers: 0,
+        answeredQuestions: 0
+      };
+      room.playerScores.push(playerScore);
+    }
+    
+    // Update player score
+    playerScore.answeredQuestions++;
+    if (selectedAnswer === correctAnswer) {
+      playerScore.correctAnswers++;
+      playerScore.score += 100;
+    }
+    
+    // Notify about question results
+    if (eventHandlers['question-ended']) {
+      eventHandlers['question-ended'].forEach(callback => 
+        callback({
+          correctAnswer,
+          scores: room.playerScores
+        })
+      );
+    }
+    
+    // After a delay, move to next question
+    setTimeout(() => {
+      // Check if room still exists
+      if (!mockGameRooms.has(roomId) || !room.gameStarted) return;
+      
+      const nextIndex = questionIndex + 1;
+      
+      // If we've reached the last question, end the game
+      if (nextIndex >= room.questions.length) {
+        room.gameStarted = false;
+        
+        if (eventHandlers['game-ended']) {
+          eventHandlers['game-ended'].forEach(callback => callback());
+        }
+      } else {
+        room.currentQuestion = nextIndex;
+        
+        if (eventHandlers['next-question']) {
+          eventHandlers['next-question'].forEach(callback => 
+            callback({ questionIndex: nextIndex })
+          );
+          
+          // Start timer for next question
+          startTimerForQuestion(roomId, nextIndex);
+        }
+      }
+    }, 5000);
+  }
+  
+  // Helper function to start timer for next question
+  function startTimerForQuestion(roomId: string, questionIndex: number) {
     if (!eventHandlers['timer-update']) return;
+    
+    // Clear any existing timer
+    if (timerInterval) {
+      clearInterval(timerInterval);
+    }
     
     let timeLeft = 15;
     timerInterval = setInterval(() => {
       timeLeft--;
+      
+      // If room was deleted or game ended, clear timer
+      if (!mockGameRooms.has(roomId) || 
+          !mockGameRooms.get(roomId).gameStarted) {
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+        return;
+      }
+      
       eventHandlers['timer-update'].forEach(callback => callback({ timeLeft }));
       
       if (timeLeft <= 0) {
@@ -243,49 +312,8 @@ const createMockSocket = (userId: string, userName: string, userPhoto: string): 
           timerInterval = null;
         }
         
-        // Question timed out - count as answered but not correct
-        answeredQuestionsCount++;
-        
-        // Trigger question ended event
-        if (eventHandlers['question-ended']) {
-          const correctAnswer = currentGameQuestions[questionIndex].correctAnswer;
-          eventHandlers['question-ended'].forEach(callback => 
-            callback({
-              correctAnswer,
-              scores: [
-                {
-                  userId,
-                  name: userName,
-                  photoURL: userPhoto,
-                  score: playerScore,
-                  correctAnswers: correctAnswersCount,
-                  answeredQuestions: answeredQuestionsCount
-                }
-              ]
-            })
-          );
-        }
-        
-        // Move to next question after delay
-        setTimeout(() => {
-          if (eventHandlers['next-question']) {
-            const nextIndex = questionIndex + 1;
-            
-            // If we've reached the last question, end the game
-            if (nextIndex >= currentGameQuestions.length) {
-              if (eventHandlers['game-ended']) {
-                eventHandlers['game-ended'].forEach(callback => callback());
-              }
-            } else {
-              eventHandlers['next-question'].forEach(callback => 
-                callback({ questionIndex: nextIndex })
-              );
-              
-              // Start timer for next question
-              startTimerForQuestion(nextIndex);
-            }
-          }
-        }, 5000);
+        // Handle question timeout
+        handleQuestionEnd(roomId, questionIndex, null);
       }
     }, 1000);
   }

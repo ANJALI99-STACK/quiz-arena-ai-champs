@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -52,18 +53,22 @@ const GameLobby = () => {
     setGameStatus('waiting');
 
     if (socket && roomId) {
+      // Join or re-join the room
       socket.emit('join-room', { roomId });
 
       socket.on('player-joined', (data) => {
+        console.log('Player joined event:', data);
         setPlayers(data.players);
       });
 
       socket.on('player-left', (data) => {
+        console.log('Player left event:', data);
         setPlayers(data.players);
       });
 
       socket.on('game-started', async (data) => {
         try {
+          console.log('Game started event:', data);
           setQuestions(data.questions);
           navigate(`/game/${roomId}`);
         } catch (error) {
@@ -72,6 +77,7 @@ const GameLobby = () => {
       });
 
       return () => {
+        // Clean up event listeners
         socket.off('player-joined');
         socket.off('player-left');
         socket.off('game-started');

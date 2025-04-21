@@ -59,7 +59,7 @@ const QuizGame = () => {
     if (!socket || !roomId) return;
 
     console.log('[QuizGame] Joining game room:', roomId);
-    socket.emit('join-game', { roomId });
+    socket.emit('join-room', { roomId });
 
     socket.on('timer-update', ({ timeLeft }) => {
       console.log('[QuizGame] Timer update:', timeLeft);
@@ -76,7 +76,6 @@ const QuizGame = () => {
 
     socket.on('next-question', ({ questionIndex }) => {
       console.log('[QuizGame] Moving to next question:', questionIndex);
-      console.log('[QuizGame] Question data:', questions[questionIndex]);
       setCurrentQuestion(questionIndex);
       setSelectedAnswer(null);
       setSubmitted(false);
@@ -109,8 +108,7 @@ const QuizGame = () => {
     socket.emit('submit-answer', {
       roomId,
       questionIndex: currentQuestion,
-      selectedAnswer,
-      questions
+      selectedAnswer
     });
 
     setSubmitted(true);
@@ -140,7 +138,7 @@ const QuizGame = () => {
           />
         </div>
 
-        {timeRemaining === 0 && !showResults && (
+        {timeRemaining === 0 && !submitted && !showResults && (
           <Alert variant="destructive" className="mb-4 animate-fade-in">
             <Timer className="h-4 w-4" />
             <AlertTitle>Time's Up!</AlertTitle>

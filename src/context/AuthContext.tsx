@@ -59,20 +59,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       toast.success("Signed in successfully!");
     } catch (error) {
       console.error("Error signing in with Google:", error);
-      toast.error("Failed to sign in. Using demo mode instead.");
+      toast.error("Failed to sign in with Google. Using demo mode instead.");
+      
+      // Use demo user when authentication fails
       setCurrentUser(DEMO_USER as unknown as User);
-      throw error;
     }
   };
 
   const logout = async () => {
     try {
+      if (currentUser && currentUser.providerId === 'demo') {
+        // If using demo user, just clear it
+        setCurrentUser(null);
+        toast.success("Signed out successfully");
+        return;
+      }
+      
       await signOut(auth);
       toast.success("Signed out successfully");
     } catch (error) {
       console.error("Error signing out:", error);
       toast.error("Failed to sign out");
-      throw error;
+      // Clear user anyway to prevent getting stuck
+      setCurrentUser(null);
     }
   };
 

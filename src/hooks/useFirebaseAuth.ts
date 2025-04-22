@@ -8,6 +8,7 @@ import {
   User
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
+import { toast } from "sonner";
 
 export const useFirebaseAuth = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -24,15 +25,35 @@ export const useFirebaseAuth = () => {
   }, []);
 
   const signup = async (email: string, password: string) => {
-    return createUserWithEmailAndPassword(auth, email, password);
+    try {
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      toast.success("Account created successfully!");
+      return result;
+    } catch (error: any) {
+      toast.error(`Failed to create account: ${error.message}`);
+      throw error;
+    }
   };
 
   const login = async (email: string, password: string) => {
-    return signInWithEmailAndPassword(auth, email, password);
+    try {
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      toast.success("Signed in successfully!");
+      return result;
+    } catch (error: any) {
+      toast.error(`Failed to sign in: ${error.message}`);
+      throw error;
+    }
   };
 
   const logout = async () => {
-    return signOut(auth);
+    try {
+      await signOut(auth);
+      toast.success("Signed out successfully");
+    } catch (error: any) {
+      toast.error(`Failed to sign out: ${error.message}`);
+      throw error;
+    }
   };
 
   return {

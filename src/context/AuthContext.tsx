@@ -1,8 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { initializeApp } from 'firebase/app';
 import { 
-  getAuth, 
   signInWithPopup, 
   GoogleAuthProvider, 
   onAuthStateChanged, 
@@ -10,17 +8,7 @@ import {
   User 
 } from 'firebase/auth';
 import { toast } from "sonner";
-
-// Firebase configuration setup for development
-// In a production app, these would be environment variables
-const firebaseConfig = {
-  apiKey: "AIzaSyDemoKeyForDevelopmentPurposesOnly",
-  authDomain: "demo-project.firebaseapp.com",
-  projectId: "demo-project",
-  storageBucket: "demo-project.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abcdef1234567890"
-};
+import { auth } from '../firebase/config';
 
 // Demo user for development purposes
 const DEMO_USER = {
@@ -32,9 +20,7 @@ const DEMO_USER = {
   emailVerified: true
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+// Initialize Google provider
 const googleProvider = new GoogleAuthProvider();
 
 interface AuthContextType {
@@ -69,14 +55,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const loginWithGoogle = async () => {
     try {
-      // For development purposes, we'll use a demo user
-      // In production, this would use the actual Firebase auth
-      if (firebaseConfig.apiKey.includes("DemoKey")) {
-        setCurrentUser(DEMO_USER as unknown as User);
-        toast.success("Signed in as Demo User");
-        return;
-      }
-      
       await signInWithPopup(auth, googleProvider);
       toast.success("Signed in successfully!");
     } catch (error) {
@@ -89,12 +67,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = async () => {
     try {
-      if (firebaseConfig.apiKey.includes("DemoKey")) {
-        setCurrentUser(null);
-        toast.success("Signed out successfully");
-        return;
-      }
-      
       await signOut(auth);
       toast.success("Signed out successfully");
     } catch (error) {

@@ -1,6 +1,8 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { initializeApp } from 'firebase/app';
 import { 
+  getAuth, 
   signInWithPopup, 
   GoogleAuthProvider, 
   onAuthStateChanged, 
@@ -8,7 +10,17 @@ import {
   User 
 } from 'firebase/auth';
 import { toast } from "sonner";
-import { auth } from '../firebase/config';
+
+// Firebase configuration setup for development
+// In a production app, these would be environment variables
+const firebaseConfig = {
+  apiKey: "AIzaSyDemoKeyForDevelopmentPurposesOnly",
+  authDomain: "demo-project.firebaseapp.com",
+  projectId: "demo-project",
+  storageBucket: "demo-project.appspot.com",
+  messagingSenderId: "123456789012",
+  appId: "1:123456789012:web:abcdef1234567890"
+};
 
 // Demo user for development purposes
 const DEMO_USER = {
@@ -20,7 +32,9 @@ const DEMO_USER = {
   emailVerified: true
 };
 
-// Initialize Google provider
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
 interface AuthContextType {
@@ -55,21 +69,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const loginWithGoogle = async () => {
     try {
+      // For development purposes, we'll use a demo user
+      // In production, this would use the actual Firebase auth
+      if (firebaseConfig.apiKey.includes("DemoKey")) {
+        setCurrentUser(DEMO_USER as unknown as User);
+        toast.success("Signed in as Demo User");
+        return;
+      }
+      
       await signInWithPopup(auth, googleProvider);
       toast.success("Signed in successfully!");
     } catch (error) {
       console.error("Error signing in with Google:", error);
-      toast.error("Failed to sign in with Google. Using demo mode instead.");
-      
-      // Use demo user when authentication fails
+      toast.error("Failed to sign in. Using demo mode instead.");
       setCurrentUser(DEMO_USER as unknown as User);
+      throw error;
     }
   };
 
   const logout = async () => {
     try {
-      if (currentUser && currentUser.providerId === 'demo') {
-        // If using demo user, just clear it
+      if (firebaseConfig.apiKey.includes("DemoKey")) {
         setCurrentUser(null);
         toast.success("Signed out successfully");
         return;
@@ -80,8 +100,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (error) {
       console.error("Error signing out:", error);
       toast.error("Failed to sign out");
-      // Clear user anyway to prevent getting stuck
-      setCurrentUser(null);
+      throw error;
     }
   };
 
